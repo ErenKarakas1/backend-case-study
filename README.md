@@ -167,29 +167,33 @@ Content-Type: application/json
 
 Returns the resulting state of the simulation, both league table and championship odds are recalculated. Its in the same format as **GET /api/simulation**.
 
+<div id='environment-variables'></div>
+
 ## Environment Variables (.env.example)
 
 ```env
-
 # Port the server will run on
 PORT=8080
 
 # Load GIN in debug mode
 GIN_MODE=debug # or release for production
 
-# Database file path
+# Database file path (make sure the folder exists)
 DATABASE_URL=database/league.db
-
 ```
 
 ## Usage
 
 For local development:
-1. Run `go run .` in the root directory
-2. The server will run on `http://localhost:8080` by default.
+1. Run `go mod tidy` in the root directory to install dependencies (requires Go 1.24+).
+2. Run `go run .` in the root directory.
+3. The server will run on `http://localhost:8080` by default.
 
 Alternatively, you can visit [here](https://insider-backend-case.onrender.com/) for the deployed version.
 
+**Side note:** It seems Render's free tier is pretty aggressive. You might experience slowdowns, or the deployments may be put to sleep when you first try to access it.
+
+---
 
 `Simulate Next Week` button will send a request to the `api/simulation/next-week` endpoint.
 
