@@ -63,10 +63,13 @@ func main() {
 
 	router.GET("/", handlers.ServeIndex())
 
-	const port string = ":8080"
-	log.Println("Server is running on http://localhost" + port)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Println("Server is running on http://localhost:" + port)
 
-	if err := router.Run(port); err != nil {
+	if err := router.Run(":" + port); err != nil {
 		log.Fatal("Failed to start server: ", err)
 	}
 }

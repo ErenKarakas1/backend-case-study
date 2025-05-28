@@ -171,6 +171,9 @@ Returns the resulting state of the simulation, both league table and championshi
 
 ```env
 
+# Port the server will run on
+PORT=8080
+
 # Load GIN in debug mode
 GIN_MODE=debug # or release for production
 
