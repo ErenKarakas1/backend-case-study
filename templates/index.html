@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Premier League Simulation</title>
+    <style>
+      body {
+        font-family: 'Open Sans', 'Arial', 'Helvetica Neue', sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 30px;
+      }
+
+      .controls {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .btn {
+        background-color: #1968f9;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        margin: 0 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+      }
+
+      .btn:hover {
+        background-color: #0056b3;
+      }
+
+      .btn:disabled {
+        background-color: #6c757d;
+      }
+
+      .btn-reset {
+        background-color: #dc3545;
+      }
+
+      .btn-reset:hover {
+        background-color: #c82333;
+      }
+
+      .content {
+        display: flex;
+        gap: 20px;
+      }
+
+      .left-panel {
+        flex: 2;
+      }
+
+      .right-panel {
+        flex: 1;
+      }
+
+      .week-info {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 12px 8px;
+        border-bottom: 1px solid #ddd;
+      }
+
+      th {
+        background-color: #f8f9fa;
+        font-weight: bold;
+        color: #333;
+      }
+
+      tr:hover {
+        background-color: #f5f5f5;
+      }
+
+      .team-name {
+        font-weight: bold;
+      }
+
+      .matches-section h3 {
+        color: #333;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 10px;
+      }
+
+      .match {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        margin-bottom: 8px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        border-left: 4px solid #007bff;
+      }
+
+      .match.played {
+        border-left-color: #28a745;
+        background-color: #c8ecd0;
+      }
+
+      .match-teams {
+        flex: 1;
+      }
+
+      .match-score {
+        font-weight: bold;
+        color: #333;
+      }
+
+      .loading {
+        text-align: center;
+        color: #6c757d;
+        font-style: italic;
+      }
+
+      .error {
+        color: #dc3545;
+        text-align: center;
+        padding: 10px;
+        background-color: #f8d7da;
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
+
+      .prediction-section {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 2px solid #e9ecef;
+      }
+
+      .prediction-section h3 {
+        color: #6f42c1;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Premier League - Standings</h1>
+
+      <div class="controls">
+        <button id="nextWeekBtn" class="btn">Simulate Next Week</button>
+        <button id="simulateBtn" class="btn">Simulate Remaining Weeks</button>
+        <button id="resetBtn" class="btn btn-reset">Reset Simulation</button>
+      </div>
+
+      <div id="error" class="error" style="display: none"></div>
+
+      <div class="week-info">
+        <span id="currentWeek">Week 1</span>
+      </div>
+
+      <div class="content">
+        <div class="left-panel">
+          <h2>League Table</h2>
+          <table id="leagueTable">
+            <thead>
+              <tr>
+                <th>Teams</th>
+                <th>P</th>
+                <th>W</th>
+                <th>D</th>
+                <th>L</th>
+                <th>GD</th>
+                <th>Pts</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr>
+                <td colspan="10" class="loading">Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div
+            id="predictionSection"
+            class="prediction-section"
+            style="display: none"
+          >
+            <h3>Predictions for Championship</h3>
+            <table id="predictionTable">
+              <thead>
+                <tr>
+                  <th>Team</th>
+                  <th>Probability</th>
+                </tr>
+              </thead>
+              <tbody id="predictionBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="right-panel">
+          <div class="matches-section">
+            <h3>Matches</h3>
+            <div id="matchesContainer">
+              <div class="loading">Loading matches...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let currentState = null;
+
+      const nextWeekBtn = document.getElementById("nextWeekBtn");
+      const simulateBtn = document.getElementById("simulateBtn");
+      const resetBtn = document.getElementById("resetBtn");
+      const currentWeekSpan = document.getElementById("currentWeek");
+      const tableBody = document.getElementById("tableBody");
+      const matchesContainer = document.getElementById("matchesContainer");
+      const errorDiv = document.getElementById("error");
+      const predictionSection = document.getElementById("predictionSection");
+      const predictionBody = document.getElementById("predictionBody");
+
+      // Event listeners
+      nextWeekBtn.addEventListener("click", simulateNextWeek);
+      simulateBtn.addEventListener("click", simulateRemainingWeeks);
+      resetBtn.addEventListener("click", resetSimulation);
+
+      // API calls
+      async function fetchCurrentState() {
+        try {
+          const response = await fetch("/api/simulation");
+          if (!response.ok) throw new Error("Failed to fetch simulation state");
+          const data = await response.json();
+          currentState = data;
+          updateUI();
+        } catch (error) {
+          showError("Error loading simulation: " + error.message);
+        }
+      }
+
+      async function simulateNextWeek() {
+        if (!currentState) return;
+
+        nextWeekBtn.disabled = true;
+
+        try {
+          const response = await fetch("/api/simulation/next-week", {
+            method: "POST",
+          });
+          if (!response.ok) throw new Error("Failed to simulate next week");
+          await fetchCurrentState();
+          hideError();
+        } catch (error) {
+          showError("Error simulating next week: " + error.message);
+        } finally {
+          nextWeekBtn.disabled = false;
+        }
+      }
+
+      async function simulateRemainingWeeks() {
+        if (!currentState) return;
+
+        simulateBtn.disabled = true;
+
+        try {
+          const response = await fetch("/api/simulation/remaining-weeks", {
+            method: "POST",
+          });
+          if (!response.ok) throw new Error("Failed to simulate season");
+          const data = await response.json();
+          currentState = data;
+          updateUI();
+          hideError();
+        } catch (error) {
+          showError("Error simulating remaining weeks: " + error.message);
+        } finally {
+          simulateBtn.disabled = false;
+        }
+      }
+
+      async function resetSimulation() {
+        resetBtn.disabled = true;
+
+        try {
+          const response = await fetch("/api/simulation/reset", {
+            method: "POST",
+          });
+          if (!response.ok) throw new Error("Failed to reset simulation");
+          await fetchCurrentState();
+          hideError();
+        } catch (error) {
+          showError("Error resetting simulation: " + error.message);
+        } finally {
+          resetBtn.disabled = false;
+        }
+      }
+
+      function updateUI() {
+        if (!currentState) return;
+
+        updateWeekInfo();
+        updateLeagueTable();
+        updateMatches();
+        updatePrediction();
+        updateButtons();
+      }
+
+      function updateWeekInfo() {
+        if (currentState.current_week > currentState.max_weeks) {
+          currentWeekSpan.textContent = "Season Complete";
+        } else {
+          currentWeekSpan.textContent = `Week ${currentState.current_week}`;
+        }
+      }
+
+      function updateLeagueTable() {
+        tableBody.innerHTML = "";
+
+        currentState.table.forEach((entry) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td class="team-name">${entry.team.name}</td>
+                    <td>${entry.played}</td>
+                    <td>${entry.won}</td>
+                    <td>${entry.drawn}</td>
+                    <td>${entry.lost}</td>
+                    <td>${entry.goal_diff > 0 ? "+" : ""}${entry.goal_diff}</td>
+                    <td><strong>${entry.points}</strong></td>
+                `;
+          tableBody.appendChild(row);
+        });
+      }
+
+      function updateMatches() {
+        matchesContainer.innerHTML = "";
+
+        // Group matches by week
+        const matchesByWeek = {};
+        currentState.matches.forEach((match) => {
+          if (!matchesByWeek[match.week]) {
+            matchesByWeek[match.week] = [];
+          }
+          matchesByWeek[match.week].push(match);
+        });
+
+        // Display matches for each week
+        Object.keys(matchesByWeek)
+          .sort((a, b) => parseInt(a) - parseInt(b))
+          .forEach((week) => {
+            const weekDiv = document.createElement("div");
+            weekDiv.innerHTML = `<h4>Week ${week}</h4>`;
+
+            matchesByWeek[week].forEach((match) => {
+              const matchDiv = document.createElement("div");
+              matchDiv.className = `match ${match.is_played ? "played" : ""}`;
+
+              const homeTeam = match.home_team?.name || "Unknown";
+              const awayTeam = match.away_team?.name || "Unknown";
+
+              if (
+                match.is_played &&
+                match.home_score !== null &&
+                match.away_score !== null
+              ) {
+                matchDiv.innerHTML = `
+                            <div class="match-teams">${homeTeam} vs ${awayTeam}</div>
+                            <div class="match-score">${match.result.home_score} - ${match.result.away_score}</div>
+                        `;
+              } else {
+                matchDiv.innerHTML = `
+                            <div class="match-teams">${homeTeam} vs ${awayTeam}</div>
+                            <div class="match-score">-</div>
+                        `;
+              }
+
+              weekDiv.appendChild(matchDiv);
+            });
+
+            matchesContainer.appendChild(weekDiv);
+          });
+      }
+
+      function updatePrediction() {
+        if (
+          currentState.championship_odds &&
+          currentState.championship_odds.length > 0
+        ) {
+          predictionSection.style.display = "block";
+          predictionBody.innerHTML = "";
+
+          currentState.championship_odds.forEach((odds) => {
+            const percentage = (odds.probability * 100).toFixed(1);
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td class="team-name">${odds.team_name}</td>
+                <td>${percentage}%</td>
+            `;
+            predictionBody.appendChild(row);
+          });
+        } else {
+          predictionSection.style.display = "none";
+        }
+      }
+
+      function updateButtons() {
+        const seasonComplete = currentState.current_week > currentState.max_weeks;
+        nextWeekBtn.disabled = seasonComplete;
+        simulateBtn.disabled = seasonComplete;
+      
+        if (nextWeekBtn.disabled) {
+          nextWeekBtn.textContent = "Season Complete";
+          simulateBtn.textContent = "Season Complete";
+        } else {
+          nextWeekBtn.textContent = "Simulate Next Week";
+          simulateBtn.textContent = "Simulate Remaining Weeks";
+        }
+      }
+
+      function showError(message) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = "block";
+      }
+
+      function hideError() {
+        errorDiv.style.display = "none";
+      }
+
+      fetchCurrentState();
+    </script>
+  </body>
+</html>

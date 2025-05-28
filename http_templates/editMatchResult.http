@@ -1,0 +1,12 @@
+@match_id=1
+@home_score=1
+@away_score=1
+
+PUT http://localhost:8080/api/simulation/edit-match-result
+Content-Type: application/json
+
+{
+  "match_id": {{match_id}},
+  "home_score": {{home_score}},
+  "away_score": {{away_score}}
+}
