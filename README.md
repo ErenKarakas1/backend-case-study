@@ -17,12 +17,11 @@ estimate the final league table.
 /root
     database/
         database.go             # Collection of database operations
-        league.db
         queries.go              # Collection of reused queries
     handlers/
         handlers_test.go
         handlers.go
-    http_templates              # Collection of example HTTP request templates
+    http_templates/             # Collection of example HTTP request templates
     models/                     # Project-wide used types are defined here
         league.go
         match.go
@@ -40,6 +39,7 @@ estimate the final league table.
         services.go
     templates/
         index.html
+    .env.example
     go.mod
     go.sum
     main.go
@@ -185,7 +185,7 @@ For local development:
 1. Run `go run .` in the root directory
 2. The server will run on `http://localhost:8080` by default.
 
-Alternatively:
+Alternatively, you can visit [here](https://insider-backend-case.onrender.com/) for the deployed version.
 
 
 `Simulate Next Week` button will send a request to the `api/simulation/next-week` endpoint.
